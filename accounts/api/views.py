@@ -1,14 +1,20 @@
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.api.serializers import RegisterSerializer, LoginSerializer, ResetPasswordSerializer, \
-    ResetPasswordTokenSerializer
+from accounts.api.serializers import ChangePasswordSerializer
+from accounts.api.serializers import LoginSerializer
+from accounts.api.serializers import RegisterSerializer
+from accounts.api.serializers import ResetPasswordSerializer
+from accounts.api.serializers import ResetPasswordTokenSerializer
+from accounts.api.serializers import UserSerializer
 from accounts.models import User
 from project.utils import PasswordResetTokenGenerator
 
@@ -94,3 +100,22 @@ class ResetPasswordAPIView(APIView):
         return Response({'errors': "invalid token or uuid", }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ChangePasswordAPIView(APIView):
+    serializer_class = ChangePasswordSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        old_password = serializer.validated_data.get('old_password')
+        new_password = serializer.validated_data.get('new_password')
+        if request.user.check_password(old_password):
+            request.user.set_password(new_password)
+            request.user.save()
+            return Response({'message': "password changed"}, status=status.HTTP_200_OK)
+        return Response({'errors': "wrong password", }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UsersListAPIView(ListAPIView):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()

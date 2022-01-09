@@ -45,3 +45,14 @@ class ResetPasswordTokenSerializer(serializers.Serializer):
     token = serializers.CharField(write_only=True)
     uid = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'name',)
