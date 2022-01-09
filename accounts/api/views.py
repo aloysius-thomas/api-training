@@ -43,7 +43,7 @@ class LoginAPIView(APIView):
         else:
             return Response(
                 {
-                    'message': "invalid credentials",
+                    'errors': "invalid credentials",
                 },
                 status=status.HTTP_400_BAD_REQUEST)
 
@@ -91,6 +91,6 @@ class ResetPasswordAPIView(APIView):
                 user.set_password(password)
                 user.save()
                 return Response({'message': "password reset success"}, status=status.HTTP_200_OK)
-        return Response({'message': "invalid token or uuid", }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'errors': "invalid token or uuid", }, status=status.HTTP_400_BAD_REQUEST)
 
 
