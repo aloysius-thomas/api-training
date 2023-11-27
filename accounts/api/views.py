@@ -34,24 +34,26 @@ class LoginAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data.get('username')
-        password = serializer.validated_data.get('password')
+        username = serializer.validated_data.get("username")
+        password = serializer.validated_data.get("password")
         user = authenticate(username=username, password=password)
 
         if user is not None:
             return Response(
                 {
-                    'token': user.token,
-                    'name': user.name,
-                    'username': user.username,
+                    "token": user.token,
+                    "name": user.name,
+                    "username": user.username,
                 },
-                status=status.HTTP_200_OK)
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(
                 {
-                    'errors': "invalid credentials",
+                    "errors": "invalid credentials",
                 },
-                status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class RequestResetPasswordAPIView(APIView):
@@ -62,12 +64,15 @@ class RequestResetPasswordAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data.get('username')
+        username = serializer.validated_data.get("username")
         user = User.objects.get(username=username)
         return Response(
-            {'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-             'token': PasswordResetTokenGenerator().make_token(user),
-             }, status=status.HTTP_200_OK)
+            {
+                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                "token": PasswordResetTokenGenerator().make_token(user),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 def get_user(uidb64):
@@ -88,16 +93,23 @@ class ResetPasswordAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        token = serializer.validated_data.get('token')
-        uid = serializer.validated_data.get('uid')
-        password = serializer.validated_data.get('password')
+        token = serializer.validated_data.get("token")
+        uid = serializer.validated_data.get("uid")
+        password = serializer.validated_data.get("password")
         user = get_user(uid)
         if user is not None:
             if PasswordResetTokenGenerator().check_token(user, token):
                 user.set_password(password)
                 user.save()
-                return Response({'message': "password reset success"}, status=status.HTTP_200_OK)
-        return Response({'errors': "invalid token or uuid", }, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "password reset success"}, status=status.HTTP_200_OK
+                )
+        return Response(
+            {
+                "errors": "invalid token or uuid",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class ChangePasswordAPIView(APIView):
@@ -106,14 +118,18 @@ class ChangePasswordAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        old_password = serializer.validated_data.get('old_password')
-        new_password = serializer.validated_data.get('new_password')
+        old_password = serializer.validated_data.get("old_password")
+        new_password = serializer.validated_data.get("new_password")
         if request.user.check_password(old_password):
             request.user.set_password(new_password)
             request.user.save()
-            return Response({'message': "password changed"}, status=status.HTTP_200_OK)
-        return Response({'errors': "wrong password", }, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"message": "password changed"}, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "errors": "wrong password",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class UsersListAPIView(ListAPIView):
